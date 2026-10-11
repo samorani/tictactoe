@@ -1,2 +1,2 @@
-Three in a row wins.
+Three in a row wins, in any direction.
 X starts the first game; then players take turns.
