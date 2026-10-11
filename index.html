@@ -58,6 +58,7 @@
     cursor: pointer;
   }
   .btns button.secondary { background: #585b70; color: #eee; }
+  .mode { margin-top: 14px; display: flex; gap: 8px; align-items: center; }
   .hint { margin-top: 14px; color: #a6adc8; font-size: .85rem; }
 </style>
 </head>
@@ -74,6 +75,7 @@
   <button id="next">New Game</button>
   <button id="reset" class="secondary">Reset Tally</button>
 </div>
+<label class="mode"><input type="checkbox" id="cpu"> Computer plays O</label>
 <div class="hint">Click a square, or Tab to a square and press Enter/Space. Press N for a new game.</div>
 
 <script>
@@ -82,7 +84,9 @@
   const boardEl = document.getElementById('board');
   const statusEl = document.getElementById('status');
   const score = { X: 0, O: 0, D: 0 };
-  let board, turn, over, starter = 'X';
+  let board, turn, over, starter = 'X', timer = null;
+  const cpuEl = document.getElementById('cpu');
+  const cpuTurn = () => cpuEl.checked && turn === 'O';
 
   const cells = [];
   for (let i = 0; i < 9; i++) {
@@ -95,16 +99,57 @@
   }
 
   function start() {
+    clearTimeout(timer);
     board = Array(9).fill('');
     over = false;
     turn = starter;
     starter = starter === 'X' ? 'O' : 'X'; // alternate who goes first
     cells.forEach(c => { c.textContent = ''; c.className = 'cell'; c.disabled = false; });
     statusEl.textContent = "Player " + turn + "'s turn";
+    maybeCpu();
   }
 
-  function play(i) {
-    if (over || board[i]) return;
+  function winner(b) {
+    const l = LINES.find(l => b[l[0]] && l.every(k => b[k] === b[l[0]]));
+    return l ? b[l[0]] : null;
+  }
+
+  // Minimax from O's point of view: higher is better for O, faster wins preferred.
+  function minimax(b, player, depth) {
+    const w = winner(b);
+    if (w) return w === 'O' ? 10 - depth : depth - 10;
+    if (b.every(Boolean)) return 0;
+    let best = player === 'O' ? -Infinity : Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (b[i]) continue;
+      b[i] = player;
+      const v = minimax(b, player === 'O' ? 'X' : 'O', depth + 1);
+      b[i] = '';
+      best = player === 'O' ? Math.max(best, v) : Math.min(best, v);
+    }
+    return best;
+  }
+
+  function cpuMove() {
+    let bestI = -1, bestV = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i]) continue;
+      board[i] = 'O';
+      const v = minimax(board, 'X', 1);
+      board[i] = '';
+      if (v > bestV) { bestV = v; bestI = i; }
+    }
+    play(bestI, true);
+  }
+
+  function maybeCpu() {
+    if (over || !cpuTurn()) return;
+    cells.forEach(c => c.disabled = true);
+    timer = setTimeout(cpuMove, 400);
+  }
+
+  function play(i, byCpu) {
+    if (over || board[i] || (cpuTurn() && !byCpu)) return;
     board[i] = turn;
     cells[i].textContent = turn;
     cells[i].classList.add(turn);
@@ -123,6 +168,8 @@
     } else {
       turn = turn === 'X' ? 'O' : 'X';
       statusEl.textContent = "Player " + turn + "'s turn";
+      cells.forEach((c, k) => c.disabled = !!board[k]);
+      maybeCpu();
       return;
     }
     cells.forEach(c => c.disabled = true);
@@ -140,6 +187,10 @@
     score.X = score.O = score.D = 0;
     starter = 'X';
     render();
+    start();
+  });
+  cpuEl.addEventListener('change', () => {
+    starter = 'X';
     start();
   });
   document.addEventListener('keydown', e => {
