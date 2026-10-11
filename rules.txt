@@ -1,1 +1,2 @@
 Three in a row wins.
+X starts the first game; then players take turns.
