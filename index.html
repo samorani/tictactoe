@@ -17,7 +17,7 @@
   }
   h1 { margin: 0 0 12px; }
   #status { font-size: 1.4rem; min-height: 2rem; margin-bottom: 12px; }
-  #moves { color: #a6adc8; margin-bottom: 12px; }
+  #moves { color: #a6adc8; margin-top: 12px; }
   #board {
     display: grid;
     grid-template-columns: repeat(3, 100px);
@@ -39,7 +39,7 @@
   .cell.X { color: #89b4fa; }
   .cell.O { color: #f38ba8; }
   .cell.win { background: #a6e3a1; color: #1e1e2e; }
-  #scores { display: flex; gap: 12px; margin: 20px 0 12px; }
+  #scores { display: flex; gap: 12px; margin: 12px 0; }
   .score {
     background: #313244;
     padding: 8px 18px;
@@ -66,8 +66,8 @@
 <body>
 <h1>Tic-Tac-Toe</h1>
 <div id="status" aria-live="polite"></div>
-<div id="moves">Moves: 0</div>
 <div id="board"></div>
+<div id="moves">Moves: 0</div>
 <div id="scores">
   <div class="score">X wins<b id="sx">0</b></div>
   <div class="score">Draws<b id="sd">0</b></div>
