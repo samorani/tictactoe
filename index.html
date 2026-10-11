@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic-Tac-Toe</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1e1e2e;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 24px 12px;
+  }
+  h1 { margin: 0 0 12px; }
+  #status { font-size: 1.4rem; min-height: 2rem; margin-bottom: 12px; }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 6px;
+  }
+  .cell {
+    background: #313244;
+    border: none;
+    border-radius: 8px;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #eee;
+    cursor: pointer;
+  }
+  .cell:hover:not(:disabled) { background: #45475a; }
+  .cell:focus-visible { outline: 3px solid #f9e2af; }
+  .cell:disabled { cursor: default; }
+  .cell.X { color: #89b4fa; }
+  .cell.O { color: #f38ba8; }
+  .cell.win { background: #a6e3a1; color: #1e1e2e; }
+  #scores { display: flex; gap: 12px; margin: 20px 0 12px; }
+  .score {
+    background: #313244;
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 70px;
+  }
+  .score b { display: block; font-size: 1.6rem; }
+  .btns { display: flex; gap: 10px; }
+  .btns button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #89b4fa;
+    color: #1e1e2e;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .btns button.secondary { background: #585b70; color: #eee; }
+  .hint { margin-top: 14px; color: #a6adc8; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>Tic-Tac-Toe</h1>
+<div id="status" aria-live="polite"></div>
+<div id="board"></div>
+<div id="scores">
+  <div class="score">X wins<b id="sx">0</b></div>
+  <div class="score">Draws<b id="sd">0</b></div>
+  <div class="score">O wins<b id="so">0</b></div>
+</div>
+<div class="btns">
+  <button id="next">New Game</button>
+  <button id="reset" class="secondary">Reset Tally</button>
+</div>
+<div class="hint">Click a square, or Tab to a square and press Enter/Space. Press N for a new game.</div>
+
+<script>
+(function () {
+  const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const boardEl = document.getElementById('board');
+  const statusEl = document.getElementById('status');
+  const score = { X: 0, O: 0, D: 0 };
+  let board, turn, over, starter = 'X';
+
+  const cells = [];
+  for (let i = 0; i < 9; i++) {
+    const b = document.createElement('button');
+    b.className = 'cell';
+    b.setAttribute('aria-label', 'Square ' + (i + 1));
+    b.addEventListener('click', () => play(i));
+    boardEl.appendChild(b);
+    cells.push(b);
+  }
+
+  function start() {
+    board = Array(9).fill('');
+    over = false;
+    turn = starter;
+    starter = starter === 'X' ? 'O' : 'X'; // alternate who goes first
+    cells.forEach(c => { c.textContent = ''; c.className = 'cell'; c.disabled = false; });
+    statusEl.textContent = "Player " + turn + "'s turn";
+  }
+
+  function play(i) {
+    if (over || board[i]) return;
+    board[i] = turn;
+    cells[i].textContent = turn;
+    cells[i].classList.add(turn);
+    cells[i].disabled = true;
+
+    const line = LINES.find(l => l.every(k => board[k] === turn));
+    if (line) {
+      over = true;
+      line.forEach(k => cells[k].classList.add('win'));
+      score[turn]++;
+      statusEl.textContent = 'Player ' + turn + ' wins!';
+    } else if (board.every(Boolean)) {
+      over = true;
+      score.D++;
+      statusEl.textContent = "It's a draw!";
+    } else {
+      turn = turn === 'X' ? 'O' : 'X';
+      statusEl.textContent = "Player " + turn + "'s turn";
+      return;
+    }
+    cells.forEach(c => c.disabled = true);
+    render();
+  }
+
+  function render() {
+    document.getElementById('sx').textContent = score.X;
+    document.getElementById('so').textContent = score.O;
+    document.getElementById('sd').textContent = score.D;
+  }
+
+  document.getElementById('next').addEventListener('click', start);
+  document.getElementById('reset').addEventListener('click', () => {
+    score.X = score.O = score.D = 0;
+    starter = 'X';
+    render();
+    start();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) start();
+  });
+
+  render();
+  start();
+})();
+</script>
+</body>
+</html>
